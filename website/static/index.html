@@ -1,0 +1,125 @@
+<html>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.20/lodash.min.js"
+    integrity="sha512-90vH1Z83AJY9DmlWa8WkjkV79yfS2n2Oxhsi2dZbIv0nC4E6m5AbH8Nh156kkM7JePmqD6tcZsfad1ueoaovww=="
+    crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"
+    integrity="sha512-EnXkkBUGl2gBm/EIZEgwWpQNavsnBbeMtjklwAa7jLj60mJk932aqzXFmdPKCG6ge/i8iOCK0Uwl1Qp+S0zowg=="
+    crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.css"
+    integrity="sha512-XXtRBFtk/QfR8GEWwQPYjrQBHQwjidXg0wo8HJi9YOaFycWqd2uWkjJoAyx8Mb/+H8uhvmf70EAIxDnQxrwrvw=="
+    crossorigin="anonymous" />
+
+<link rel="stylesheet" href="styles.css" />
+
+
+<style>
+
+</style>
+
+<body>
+    <div id="wrapper">
+
+
+        <!-- Each Limb -->
+        <div class="inner-wrapper">
+            <div class="limb-wrapper">
+                <div id="lower" class="vertical"></div>
+                <p>Lower</p>
+            </div>
+
+            <div class="limb-wrapper">
+                <div id="upper" class="vertical"></div>
+                <p>Upper</p>
+            </div>
+        </div>
+        <!-- Height and width -->
+        <div class="inner-wrapper">
+            <table>
+                <tr>
+                    <td>
+                        <div id="height" class="vertical"></div>
+                    </td>
+                    <td>
+                        <svg onload="makeDraggable(evt)" version=" 1.1 " baseProfile="full" width="200" height="200"
+                            xmlns="http://www.w3.org/2000/svg ">
+                            <defs>
+                                <radialGradient id="gradient">
+                                    <stop offset="10%" stop-color="#CCC" />
+                                    <stop offset="95%" stop-color="#AAA" />
+                                </radialGradient>
+                            </defs>
+                            <circle cx="100" cy="100" r="90" stroke="black" fill="transparent" stroke-width="1" />
+                            <circle cx="100" cy="100" r="20" fill="url('#gradient')" id="joystick" class="draggable" />
+                        </svg>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        &nbsp;
+                    </td>
+                    <td>
+                        <div id="length" class="horizontal"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="inner-wrapper">
+            <div class="limb-wrapper">
+                <div id="head" class="vertical"></div>
+                <p>head</p>
+            </div>
+        </div>
+        <div class="inner-wrapper">
+            <div>
+                <input type="button" value="open" onclick="openMouth()">
+                <br />
+                <br />
+                <input type="button" value="close" onclick="closeMouth()">
+            </div>
+        </div>
+        <div style="clear: both">
+            <div id="turntable"></div>
+        </div>
+
+        <table style="clear: both; margin-top:20px; width:100%">
+            <tr>
+                <td>Lower</td>
+                <td>Upper</td>
+                <td>Length</td>
+                <td>Height</td>
+                <td>head</td>
+                <td>Turntable</td>
+            </tr>
+            <tr>
+                <td><input type="text" id="lowerValue" value="130" size="5" /></td>
+                <td><input type="text" id="upperValue" value="70" size="5" /></td>
+                <td><input type="text" id="lengthValue" value="200" size="5" /></td>
+                <td><input type="text" id="heightValue" value="100" size="5" /></td>
+                <td> <input type="text" id="headValue" value="135" size="5" /></td>
+                <td><input type="text" id="turntableValue" value="90" size="5" /></td>
+            </tr>
+        </table>
+    </div>
+
+
+
+    <input type="button" onclick="pickup(squares.a)" value="pickup A" />
+    <input type="button" onclick="drop(squares.a)" value="drop A" />
+    <input type="button" onclick="pickup(squares.b)" value="pickup B" />
+    <input type="button" onclick="drop(squares.b)" value="drop B" />
+
+    <input type="button" onclick="pickup(squares.c)" value="pickup C" />
+    <input type="button" onclick="drop(squares.c)" value="drop C" />
+
+</body>
+
+
+<script src="settings.js "></script>
+<script src="utils.js "></script>
+<script src="script.js "></script>
+
+</html>
