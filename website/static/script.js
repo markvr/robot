@@ -7,6 +7,22 @@ var sliders = [
   { "name": "height", "orientation": "vertical", "type": "length" },
 ]
 
+const Change = {
+  "ANGLE": 1,
+  "COORDS": 2
+};
+
+const Speed = {
+  "NONE" : "none",
+  "FAST": "fast",
+  "SLOW": "slow"
+}
+
+var storage = window.localStorage
+const STORAGE_KEY = "values"
+
+var lastChangeBy = Change.ANGLE;
+
 var $lower = $("#lowerValue");
 var $upper = $("#upperValue");
 var $head = $("#headValue");
@@ -17,13 +33,28 @@ var $height = $("#heightValue");
 var updateTimer;
 var selectedElement = false;
 
+var savedValues = storage.getItem(STORAGE_KEY);
+if (savedValues && confirm("Load saved values?")) {
+  var data = JSON.parse(savedValues)
+  $lower.val(data.lower);
+  $upper.val(data.upper);
+  $head.val(data.head)
+  $turntable.val(data.turntable);
+  calculateCoords();
+} else {
+  home(Speed.FAST);
+}
+
 
 [$length, $height].forEach((el) => el.change(() => {
   calculateAngles();
-  postAll(true)
+  postAll(Speed.SLOW)
 }));
 
-[$lower, $upper, $head, $turntable].forEach((el) => el.change(() => postAll(true)));
+[$lower, $upper, $head, $turntable].forEach((el) => el.change(() => {
+  calculateCoords();
+  postAll(Speed.SLOW)
+}));
 
 
 sliders.forEach(limb => {
@@ -47,16 +78,18 @@ sliders.forEach(limb => {
 function startSliderUpdate() {
   var name = this.options.name
   var type = this.options.type;
-  var valueEl = $("#" + name + "Value")[0]
+  var $valueEl = $("#" + name + "Value")
   var slider = this
   updateTimer = setInterval(() => {
-    incrementValue(valueEl, slider.get())
+    incrementValue($valueEl, slider.get())
     if (type == "length") {
       calculateAngles();
+    } else {
+      calculateCoords();
     }
-    postAll(false)
+    postAll(Speed.FAST)
 
-  }, 100)
+  }, settings.updatePause)
 }
 
 function stopsliderUpdate() {
@@ -66,17 +99,17 @@ function stopsliderUpdate() {
 
 
 function startJoystickUpdate() {
-  var lengthValueEl = $("#lengthValue")[0]
-  var heightValueEl = $("#heightValue")[0]
+  var $lengthValueEl = $("#lengthValue")
+  var $heightValueEl = $("#heightValue")
   updateTimer = setInterval(() => {
     var cx = selectedElement.getAttributeNS(null, "cx");
     var cy = selectedElement.getAttributeNS(null, "cy");
     log("cx = " + cx + ", " + "cy = " + cy)
-    incrementValue(lengthValueEl, (cx - 100) / 10)
-    incrementValue(heightValueEl, (100 - cy) / 10)
+    incrementValue($lengthValueEl, (cx - 100) / 10)
+    incrementValue($heightValueEl, (100 - cy) / 10)
     calculateAngles();
-    postAll(false)
-  }, 100)
+    postAll(Speed.FAST)
+  }, settings.updatePause)
 }
 
 function stopJoystickUpdate() {
@@ -92,25 +125,41 @@ function drop(position) {
   action("drop", position)
 }
 
-function incrementValue(element, increment) {
-  element.value = (parseFloat(element.value) + parseFloat(increment)).toFixed(1)
+function move(position) {
+
 }
 
-function postAll(slow = false) {
-  if (settings.postEnabled == false) return;
-  var endpoint = slow ? "slow-set" : "set"
-  var data = {
+function incrementValue($element, increment) {
+  var newValue = parseFloat($element.val()) + parseFloat(increment);
+  const maxValue = $element.data("max");
+  const minValue = 0;
+  if (newValue > maxValue) {
+    throw ("Value " + newValue + " exceeds max value of " + maxValue);
+  } else if (newValue < minValue) {
+    throw ("Value " + newValue + " is less than min value of " + minValue);
+  } else {
+    $element.val(newValue.toFixed(1))
+  }
+}
+
+function postAll(speed = Speed.FAST) {
+
+  var data = JSON.stringify({
     "lower": $lower.val(),
     "upper": $upper.val(),
     "head": $head.val(),
     "turntable": $turntable.val()
-  }
-  $.post({
-    "url": "/api/" + endpoint,
-    "dataType": "json",
-    "contentType": "application/json",
-    "data": JSON.stringify(data)
   })
+  storage.setItem(STORAGE_KEY, data)
+
+  if (settings.postEnabled == true) {
+    return $.post({
+      "url": "/api/set?" + speed,
+      "dataType": "json",
+      "contentType": "application/json",
+      "data": data
+    })
+  }
 }
 
 function openMouth() {
@@ -126,7 +175,7 @@ function postSingle(limb, value) {
   var data = {}
   data[limb] = value
 
-  $.post({
+  return $.post({
     "url": "/api/set",
     "dataType": "json",
     "contentType": "application/json",
@@ -135,10 +184,12 @@ function postSingle(limb, value) {
 }
 
 function action(action, position) {
-  var turntable = position.turntable
-  var length = position.length
-  var height = calculatePickupHeight(length)
-  
+  var turntable = position.turntable;
+  var length = position.length;
+  var height = settings.pickupHeight;
+  if (action == "drop") {
+    height = height + 6
+  }
   if (action == "pickup") {
     openMouth()
   }
@@ -146,23 +197,33 @@ function action(action, position) {
   $height.val(settings.safeHeight)
   $length.val(length)
   calculateAngles()
-  postAll(true)
+  postAll(Speed.SLOW)
   delay(2000)
     .then(() => {
       $height.val(height)
       calculateAngles()
-      postAll(true)
+      postAll(Speed.SLOW)
     })
-    .delay(4000)
+    .delay(3000)
     .then(() => {
-      // action == "pickup" ? closeMouth() : openMouth()
+      action == "pickup" ? closeMouth() : openMouth()
     })
     .delay(1000)
     .then(() => {
       $height.val(settings.safeHeight)
       calculateAngles()
-      postAll(true)
+      postAll(Speed.SLOW)
     })
+
+}
+
+function home(speed = Speed.FAST) {
+  $lower.val(settings.startLower);
+  $upper.val(settings.startUpper);
+  $head.val(settings.startHead)
+  $turntable.val(settings.startTurntable);
+  calculateCoords();
+  postAll(speed);
 
 }
 
@@ -170,30 +231,80 @@ function calculateAngles() {
   var length = parseFloat($length.val())
   var height = parseFloat($height.val())
 
-  hypotenuseLength = Math.sqrt(length ** 2 + (height + settings.headLength) ** 2)
+  const lowerLength = settings.lowerLength;
+  const upperLength = settings.upperLength;
 
-  var a1 = Math.degrees(Math.acos((settings.lowerLength ** 2 + hypotenuseLength ** 2 - settings.upperLength ** 2) / (2 * settings.lowerLength * hypotenuseLength)))
-  var a2 = Math.degrees(Math.atan((height + settings.headLength) / length))
+  const hypotenuseLength = Math.sqrt(length ** 2 + height ** 2)
+
+  var a1 = Math.degrees(Math.acos((lowerLength ** 2 + hypotenuseLength ** 2 - upperLength ** 2) / (2 * lowerLength * hypotenuseLength)))
+  var a2 = Math.degrees(Math.atan(height / length))
   var a = a1 + a2
   $lower.val(a.toFixed(1))
 
-  var b = Math.degrees(Math.acos((settings.lowerLength ** 2 + settings.upperLength ** 2 - hypotenuseLength ** 2) / (2 * settings.lowerLength * settings.upperLength)))
+  var b = Math.degrees(Math.acos((lowerLength ** 2 + upperLength ** 2 - hypotenuseLength ** 2) / (2 * lowerLength * upperLength)))
   $upper.val(b.toFixed(1))
 
-  var c1 = Math.degrees(Math.acos((settings.upperLength ** 2 + hypotenuseLength ** 2 - settings.lowerLength ** 2) / (2 * settings.upperLength * hypotenuseLength)))
+  var c1 = Math.degrees(Math.acos((upperLength ** 2 + hypotenuseLength ** 2 - lowerLength ** 2) / (2 * upperLength * hypotenuseLength)))
   var c2 = 90 - a2
-  var c = c1 + c2 + settings.headOffset
+  var c = c1 + c2
+
+  if (lastChangeBy === Change.ANGLE) {
+    // If we have set the head angle manually, save the offset
+    // between the manual value and vertical ("c") so we can reapply 
+    // it and keep the offset constant as we move.
+    $head.data("offset", $head.val() - c);
+  }
+
+  c = Math.min(c + $head.data("offset"), $head.data("max"));
   $head.val(c.toFixed(1))
+  setMaxCoords()
+  lastChangeBy = Change.COORDS;
 }
 
-function calculatePickupHeight(length) {
-  var gradient = (settings.farPickupHeight - settings.nearPickupHeight) / (settings.maxLength - settings.minlength)
-  var offset = settings.nearPickupHeight - gradient * settings.minlength
-  var height = length * gradient + offset
-  log("Pickup height: " + height)
-  return height;
-  
+function setMaxCoords() {
+  const lowerLength = settings.lowerLength;
+  const upperLength = settings.upperLength;
+
+  var length = parseFloat($length.val())
+  var height = parseFloat($height.val())
+
+
+  var maxhypotenuse = lowerLength + upperLength;
+  logDebug("maxHyp: " + maxhypotenuse)
+  var maxLength = Math.sqrt(maxhypotenuse ** 2 - height ** 2)
+  logDebug("maxLength: " + maxLength)
+  $length.data("max", maxLength)
+  var maxHeight = Math.sqrt(maxhypotenuse ** 2 - (length) ** 2);
+  logDebug("maxHeight: " + maxHeight)
+  $height.data("max", maxHeight)
+  logDebug("")
 }
+
+
+function calculateCoords() {
+  var lowerAngle = Math.radians(parseFloat($lower.val()))
+  var upperAngle = Math.radians(parseFloat($upper.val()))
+
+  const lowerLength = settings.lowerLength;
+  const upperLength = settings.upperLength;
+
+  var b2 = upperAngle + lowerAngle - Math.PI / 2
+  var x1 = lowerLength * Math.cos(lowerAngle)
+  var x2 = upperLength * Math.sin(b2)
+  var x = x1 + x2
+  $length.val(x.toFixed(1))
+  log("x = " + x)
+
+  var y1 = lowerLength * Math.sin(lowerAngle)
+  var y2 = upperLength * Math.cos(b2)
+  var y = y1 - y2
+  $height.val(y.toFixed(1))
+  log("y = " + y)
+  setMaxCoords()
+  lastChangeBy = Change.ANGLE;
+
+}
+
 
 
 function makeDraggable(evt) {
@@ -205,6 +316,7 @@ function makeDraggable(evt) {
   svg.addEventListener('mousedown', startDrag);
   svg.addEventListener('mousemove', drag);
   svg.addEventListener('mouseup', endDrag);
+  window.addEventListener("mouseup", endDrag)
 
   function getMousePosition(evt) {
     var CTM = svg.getScreenCTM();
@@ -241,10 +353,12 @@ function makeDraggable(evt) {
   }
 
   function endDrag(evt) {
-    selectedElement.setAttributeNS(null, "cx", centerx);
-    selectedElement.setAttributeNS(null, "cy", centery);
-    stopJoystickUpdate();
-    selectedElement = null;
+    if (selectedElement) {
+      selectedElement.setAttributeNS(null, "cx", centerx);
+      selectedElement.setAttributeNS(null, "cy", centery);
+      stopJoystickUpdate();
+      selectedElement = null;
+    }
   }
 }
 

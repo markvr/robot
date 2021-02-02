@@ -1,10 +1,7 @@
 class Arm:
-  def __init__(self, name, servos, min, max, offset, inverse = False):
-    self.name = name
+  def __init__(self, servos, direction, calibrationAngle = 0):
     self.servos = servos
-    self.min = min
-    self.max = max
-    self.offset = offset
-    self.inverse = inverse
+    self.direction = direction
+    self.calibrationAngle = calibrationAngle
 
   

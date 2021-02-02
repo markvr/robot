@@ -95,25 +95,31 @@
                 <td>Turntable</td>
             </tr>
             <tr>
-                <td><input type="text" id="lowerValue" value="130" size="5" /></td>
-                <td><input type="text" id="upperValue" value="70" size="5" /></td>
-                <td><input type="text" id="lengthValue" value="200" size="5" /></td>
-                <td><input type="text" id="heightValue" value="100" size="5" /></td>
-                <td> <input type="text" id="headValue" value="135" size="5" /></td>
-                <td><input type="text" id="turntableValue" value="90" size="5" /></td>
+                <td><input type="text" id="lowerValue"  size="5" data-max="130" /></td>
+                <td><input type="text" id="upperValue"  size="5" data-max="180"/></td>
+                <td><input type="text" id="lengthValue"  size="5" data-max="9999"/></td>
+                <td><input type="text" id="heightValue"  size="5" data-max="9999"/></td>
+                <td> <input type="text" id="headValue"  size="5" data-max="180"/></td>
+                <td><input type="text" id="turntableValue"  size="5" data-max="180"/></td>
             </tr>
         </table>
+
+        <div style="margin-top:20px; width:100%">
+            Presets: 
+            <input type="button" onclick="home(Speed.SLOW)" value="Home" />
+            <input type="button" onclick="pickup(squares.a)" value="pickup A" />
+            <input type="button" onclick="drop(squares.a)" value="drop A" />
+            <input type="button" onclick="pickup(squares.b)" value="pickup B" />
+            <input type="button" onclick="drop(squares.b)" value="drop B" />
+        
+            <input type="button" onclick="pickup(squares.c)" value="pickup C" />
+            <input type="button" onclick="drop(squares.c)" value="drop C" />
+        </div>
     </div>
 
 
 
-    <input type="button" onclick="pickup(squares.a)" value="pickup A" />
-    <input type="button" onclick="drop(squares.a)" value="drop A" />
-    <input type="button" onclick="pickup(squares.b)" value="pickup B" />
-    <input type="button" onclick="drop(squares.b)" value="drop B" />
 
-    <input type="button" onclick="pickup(squares.c)" value="pickup C" />
-    <input type="button" onclick="drop(squares.c)" value="drop C" />
 
 </body>
 

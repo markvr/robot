@@ -1,5 +1,4 @@
-from flask import Flask
-from flask import request, make_response, redirect
+from flask import Flask, request, make_response, redirect
 from lib.Robot import Robot
 import logging
 import string
@@ -24,7 +23,7 @@ requestQ = deque([])
 
 @app.route('/')
 def root():
-    return redirect("/static/", code=302)
+    return redirect("/static/index.html", code=302)
 
 @app.route("/api/set", methods=["POST"])
 def set():
@@ -67,13 +66,11 @@ def set():
 
 @app.route("/api/image.jpg")
 def getImage():
-  stream = BytesIO()
-  camera.capture(stream, format='jpeg')
-  response = make_response(stream.getvalue())
-  response.headers['content-type'] = 'image/jpeg'
-  return response;
-
-
+    stream = BytesIO()
+    camera.capture(stream, format='jpeg')
+    response = make_response(stream.getvalue())
+    response.headers['content-type'] = 'image/jpeg'
+    return response
 
 def getRandomString():
     letters = string.ascii_lowercase
