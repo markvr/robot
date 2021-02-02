@@ -1,0 +1,6 @@
+photos/
+website/.vscode/
+website/Pipfile.lock
+website/__pycache__/
+.vscode/
+website/lib/__pycache__/
