@@ -4,3 +4,4 @@ website/Pipfile.lock
 website/__pycache__/
 .vscode/
 website/lib/__pycache__/
+lib/__pycache__/
